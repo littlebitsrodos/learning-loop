@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.compound.learning</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <!-- UPDATE THIS PATH to your project's script location -->
+        <string>cd /path/to/your/project && ./scripts/compound/daily-compound-review.sh</string>
+    </array>
+    
+    <!-- Run at 10:30 PM daily -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>22</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+    
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/Cellar/node/25.4.0/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/littlebits</string>
+        <!-- Optional: Set PROJECT_DIR if different from working directory -->
+        <!-- <key>PROJECT_DIR</key>
+        <string>/path/to/your/project</string> -->
+    </dict>
+    
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/tmp/compound-learning.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/compound-learning.err.log</string>
+    
+    <!-- Keep alive if it crashes -->
+    <key>KeepAlive</key>
+    <false/>
+    
+    <!-- Run even if user is logged out -->
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
