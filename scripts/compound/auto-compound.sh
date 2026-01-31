@@ -120,10 +120,18 @@ run_shipping_loop() {
     # Pull latest changes
     log "Pulling latest changes..."
     git pull --rebase origin "$(git branch --show-current)" 2>/dev/null || log "Pull skipped (not tracking remote)"
+    # Temporary workaround for EPERM issues in ~/.gemini/tmp
+    GEMINI_HOME="/tmp/gemini_fake_home_$(date +%s)"
+    mkdir -p "$GEMINI_HOME/.gemini"
     
-    # Run Gemini in YOLO mode - it will handle branch creation, coding, and PR
+    # Selective copy of config only (avoiding the 31GB antigravity folder)
+    cp "$HOME/.gemini"/*.json "$GEMINI_HOME/.gemini/" 2>/dev/null || true
+    
+    # Ensure cleanup on exit
+    trap 'rm -rf "$GEMINI_HOME"' EXIT
+
     local result
-    result=$("$GEMINI_CLI" --yolo -o text "$prompt" 2>&1) || {
+    result=$(HOME="$GEMINI_HOME" "$GEMINI_CLI" --yolo -o text "$prompt" 2>&1) || {
         log "Gemini CLI output: $result"
         error "Gemini CLI failed"
     }

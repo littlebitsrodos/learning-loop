@@ -89,7 +89,17 @@ main() {
         log "Sending prompt to Gemini CLI..."
         
         local result
-        result=$("$GEMINI_CLI" --yolo -o text "$prompt" 2>&1) || {
+        # Temporary workaround for EPERM issues in ~/.gemini/tmp
+        GEMINI_HOME="/tmp/gemini_fake_home_learning_$(date +%s)"
+        mkdir -p "$GEMINI_HOME/.gemini"
+        
+        # Selective copy of config only
+        cp "$HOME/.gemini"/*.json "$GEMINI_HOME/.gemini/" 2>/dev/null || true
+        
+        # Ensure cleanup on exit
+        trap 'rm -rf "$GEMINI_HOME"' EXIT
+        
+        result=$(HOME="$GEMINI_HOME" "$GEMINI_CLI" --yolo -o text "$prompt" 2>&1) || {
             log "Gemini CLI output: $result"
             error "Gemini CLI failed"
         }

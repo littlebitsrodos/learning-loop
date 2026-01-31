@@ -26,3 +26,12 @@ Autonomous Nightly Agent Loop infrastructure using Gemini CLI. This project prov
 - **Permissions**: The agent needs explicit access to project directories. Sandbox restrictions can prevent `ls` or `cp` across random directories (e.g., trying to access `~/Developer/other-project` from inside `Learning Loop` context).
 - **Caffeinate**: Built-in macOS utility (`/usr/bin/caffeinate`). `-i` prevents system idle sleep. It cannot override a closed lid unless the Mac is plugged in and connected to an external display.
 
+
+## Session Learnings (2026-01-31)
+
+### Optimization & Robustness
+- **Disk Space Bomb**: Discovered `~/.gemini` can grow to 30GB+ due to artifacts.
+    - *Fix*: Modified agent scripts to perform **Selective Copy** (only `*.json`), ignoring the `antigravity` folder.
+- **Permission Locks**: `~/.gemini/tmp` often gets locked with `EPERM`.
+    - *Fix*: Implemented **Fake Home Strategy** (`GEMINI_HOME="/tmp/fake_home_..."`) to bypass system locks and ensure clean execution.
+- **Maintenance**: Added `scripts/compound/clean-memory.sh` to prune old artifact recordings.
