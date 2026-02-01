@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.compound.synthesize</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd /Users/littlebits/.gemini/antigravity/playground/infrared-orbit &amp;&amp; ./scripts/compound/weekly-synthesize.sh</string>
+    </array>
+    
+    <!-- Run on Sunday at 10:00 PM (before learning loop at 10:30) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>22</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/Cellar/node/25.4.0/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/littlebits</string>
+    </dict>
+    
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/tmp/compound-synthesize.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/compound-synthesize.err.log</string>
+    
+    <key>KeepAlive</key>
+    <false/>
+    
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

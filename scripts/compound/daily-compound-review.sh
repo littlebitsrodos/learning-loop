@@ -16,8 +16,9 @@ set -euo pipefail
 # Customize these paths for your project
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 GEMINI_CLI="${GEMINI_CLI:-/usr/local/Cellar/node/25.4.0/bin/gemini}"
-MEMORY_FILE="${MEMORY_FILE:-$HOME/.gemini/GEMINI.md}"
-LOG_FILE="${LOG_FILE:-$PROJECT_DIR/logs/compound-learning.log}"
+GLOBAL_MEMORY_FILE="${GLOBAL_MEMORY_FILE:-$HOME/.gemini/GEMINI.md}"
+PROJECT_MEMORY_FILE="${PROJECT_MEMORY_FILE:-$PROJECT_DIR/GEMINI.md}"
+LOG_FILE="${LOG_FILE:-/tmp/compound-learning.log}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ================================ HELPERS ====================================
@@ -51,7 +52,8 @@ main() {
     log "=========================================="
     log "LEARNING LOOP START"
     log "Project: $PROJECT_DIR"
-    log "Memory File: $MEMORY_FILE"
+    log "Global Memory: $GLOBAL_MEMORY_FILE"
+    log "Project Memory: $PROJECT_MEMORY_FILE"
     log "Dry Run: $dry_run"
     log "=========================================="
 
@@ -69,15 +71,30 @@ main() {
         error "Prompt template not found: $prompt_template"
     fi
 
-    # Build the full prompt
-    local current_memory=""
-    [[ -f "$MEMORY_FILE" ]] && current_memory=$(cat "$MEMORY_FILE")
+    # Load BOTH global and project memory files (distributed architecture)
+    local global_memory=""
+    local project_memory=""
+    [[ -f "$GLOBAL_MEMORY_FILE" ]] && global_memory=$(cat "$GLOBAL_MEMORY_FILE")
+    [[ -f "$PROJECT_MEMORY_FILE" ]] && project_memory=$(cat "$PROJECT_MEMORY_FILE")
     
+    # Combine memories with clear separation
+    local combined_memory=""
+    if [[ -n "$global_memory" ]]; then
+        combined_memory+="## Global Memory (~/.gemini/GEMINI.md)\n\n$global_memory\n\n"
+    fi
+    if [[ -n "$project_memory" ]]; then
+        combined_memory+="## Project Memory (GEMINI.md)\n\n$project_memory"
+    fi
+    
+    log "Loaded global memory: $(echo "$global_memory" | wc -l | tr -d ' ') lines"
+    log "Loaded project memory: $(echo "$project_memory" | wc -l | tr -d ' ') lines"
+    
+    # Build the full prompt
     local prompt=$(cat "$prompt_template")
     prompt="${prompt//\{\{DATE\}\}/$today}"
     prompt="${prompt//\{\{GIT_LOG\}\}/$git_log}"
     prompt="${prompt//\{\{GIT_DIFF\}\}/$git_diff}"
-    prompt="${prompt//\{\{CURRENT_MEMORY\}\}/$current_memory}"
+    prompt="${prompt//\{\{CURRENT_MEMORY\}\}/$combined_memory}"
 
     if $dry_run; then
         log "DRY RUN - Would send this prompt to Gemini:"

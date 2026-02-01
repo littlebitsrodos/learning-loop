@@ -16,8 +16,9 @@ set -euo pipefail
 # Customize these paths for your project
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 GEMINI_CLI="${GEMINI_CLI:-/usr/local/Cellar/node/25.4.0/bin/gemini}"
-MEMORY_FILE="${MEMORY_FILE:-$HOME/.gemini/GEMINI.md}"
-LOG_FILE="${LOG_FILE:-$PROJECT_DIR/logs/compound-shipping.log}"
+GLOBAL_MEMORY_FILE="${GLOBAL_MEMORY_FILE:-$HOME/.gemini/GEMINI.md}"
+PROJECT_MEMORY_FILE="${PROJECT_MEMORY_FILE:-$PROJECT_DIR/GEMINI.md}"
+LOG_FILE="${LOG_FILE:-/tmp/compound-shipping.log}"
 REPORTS_DIR="${REPORTS_DIR:-$PROJECT_DIR/reports}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -86,9 +87,23 @@ run_shipping_loop() {
         error "Prompt template not found: $prompt_template"
     fi
 
-    # Load memory file
-    local memory=""
-    [[ -f "$MEMORY_FILE" ]] && memory=$(cat "$MEMORY_FILE")
+    # Load BOTH global and project memory files (distributed architecture)
+    local global_memory=""
+    local project_memory=""
+    [[ -f "$GLOBAL_MEMORY_FILE" ]] && global_memory=$(cat "$GLOBAL_MEMORY_FILE")
+    [[ -f "$PROJECT_MEMORY_FILE" ]] && project_memory=$(cat "$PROJECT_MEMORY_FILE")
+    
+    # Combine memories with clear separation
+    local combined_memory=""
+    if [[ -n "$global_memory" ]]; then
+        combined_memory+="## Global Memory (~/.gemini/GEMINI.md)\n\n$global_memory\n\n"
+    fi
+    if [[ -n "$project_memory" ]]; then
+        combined_memory+="## Project Memory (GEMINI.md)\n\n$project_memory"
+    fi
+    
+    log "Loaded global memory: $(echo "$global_memory" | wc -l | tr -d ' ') lines"
+    log "Loaded project memory: $(echo "$project_memory" | wc -l | tr -d ' ') lines"
     
     # Get current branch and status
     local current_branch=$(git branch --show-current)
@@ -98,7 +113,7 @@ run_shipping_loop() {
     local prompt=$(cat "$prompt_template")
     prompt="${prompt//\{\{DATE\}\}/$today}"
     prompt="${prompt//\{\{REPORTS\}\}/$reports}"
-    prompt="${prompt//\{\{MEMORY\}\}/$memory}"
+    prompt="${prompt//\{\{MEMORY\}\}/$combined_memory}"
     prompt="${prompt//\{\{CURRENT_BRANCH\}\}/$current_branch}"
     prompt="${prompt//\{\{GIT_STATUS\}\}/$git_status}"
     prompt="${prompt//\{\{MAX_ITERATIONS\}\}/$MAX_ITERATIONS}"
